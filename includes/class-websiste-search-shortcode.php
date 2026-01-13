@@ -27,6 +27,7 @@ class Website_Search_Shortcode
         add_shortcode('website_search', [$this, 'sdw_website_search_short_code_callback']); // search box ui callback
 
         add_action('init', [$this, 'sdw_website_search_rewrite']); // add '/search' before search params
+        add_filter('user_trailingslashit', [$this, 'sdw_remove_trailing_slash_for_search'], 10, 2); // remove default trail '/' from the URL
         add_action('query_vars', [$this, 'sdw_website_search_query_vars'], 10, 1); // overwriting wordpress query behaviour s -> q
         add_action('pre_get_posts', [$this, 'sdw_pre_get_posts_callback']); // get search results
         add_filter('template_include', [$this, 'sdw_load_website_search_template']); // search template
@@ -34,6 +35,20 @@ class Website_Search_Shortcode
         add_filter('posts_join', [$this, 'sdw_posts_join'], 10, 2); // union all the search results
         add_filter('posts_search', [$this, 'sdw_posts_search'], 10, 2); // search into post meta & taxonomy
         add_filter('posts_groupby', [$this, 'sdw_posts_groupby'], 10, 2); // group by all the 
+    }
+
+    /**
+     * responsible to remove / before ?keys=
+     * 
+     * @since 1.0.1
+     * @return void
+     */
+    public function sdw_remove_trailing_slash_for_search($url, $type)
+    {
+        if (strpos($url, '/search/content/') !== false) {
+            return untrailingslashit($url);
+        }
+        return $url;
     }
 
     /**
@@ -115,7 +130,7 @@ class Website_Search_Shortcode
     public function sdw_website_search_rewrite()
     {
         add_rewrite_rule('^search/content/page/([0-9]+)/?$','index.php?sdw_search_page=1&paged=$matches[1]','top');
-        add_rewrite_rule('^search/content/?$','index.php?sdw_search_page=1','top');
+        add_rewrite_rule('^search/content?$','index.php?sdw_search_page=1','top');
     }
 
     /**
