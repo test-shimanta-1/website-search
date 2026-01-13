@@ -8,7 +8,7 @@ You can easily add a search form or a modal-based search anywhere on your site u
 ## Features
 
 - Global search across posts, pages, and custom post types
-- Clean search URLs (`/search/?q=keyword`)
+- Clean search URLs (`/search/content/?keys=keyword`)
 - Shortcode-based integration
 - Optional modal (popup) search interface
 - Customizable modal button text

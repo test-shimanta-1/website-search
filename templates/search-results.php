@@ -8,14 +8,14 @@ global $wp_query;
 
     <h1>
         Search results for:
-        <strong><?php echo esc_html(get_query_var('q')); ?></strong>
+        <strong><?php echo esc_html(get_query_var('keys')); ?></strong>
     </h1>
      <font><?php  echo $wp_query->found_posts.' results found.'; ?></font>
      <br>
       <div class="row">
         <div class="col-4">
-            <form method="get" action="<?php echo esc_url(home_url('/search/')); ?>">
-                <input type="text" name="q" class="form-control" placeholder="Enter your search query" value="<?php echo get_query_var('q'); ?>" required>
+            <form method="get" action="<?php echo esc_url(home_url('/search/content')); ?>">
+                <input type="text" name="keys" class="form-control" placeholder="Enter your search query" value="<?php echo esc_attr(get_query_var('keys')); ?>" required>
                 <button type="submit" class="btn btn-primary">Search</button>
             </form>
         </div>

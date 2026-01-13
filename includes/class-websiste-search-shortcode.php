@@ -58,8 +58,8 @@ class Website_Search_Shortcode
         ob_start();
         // FORM ONLY (default)
         if ($atts['variant'] !== 'modal'): ?>
-            <form method="get" action="<?php echo esc_url(home_url('/search/')); ?>">
-                <input type="text" name="q" class="form-control"
+            <form method="get" action="<?php echo esc_url(home_url('/search/content')); ?>">
+                <input type="text" name='keys' class="form-control"
                     placeholder="<?php esc_attr_e('Enter your search query', 'website-search'); ?>" required>
                 <button type="submit" class="btn btn-primary">
                     <?php esc_html_e('Search', 'website-search'); ?>
@@ -89,8 +89,8 @@ class Website_Search_Shortcode
                         </div>
 
                         <div class="modal-body">
-                            <form method="get" action="<?php echo esc_url(home_url('/search/')); ?>">
-                                <input type="text" name="q" class="form-control mb-2"
+                            <form method="get" action="<?php echo esc_url(home_url('/search/content')); ?>">
+                                <input type="text" name='keys' class="form-control mb-2"
                                     placeholder="<?php esc_attr_e('Enter your search query', 'website-search'); ?>" required>
                                 <button type="submit" class="btn btn-primary w-100">
                                     <?php esc_html_e('Search', 'website-search'); ?>
@@ -107,49 +107,47 @@ class Website_Search_Shortcode
 
 
     /**
-     * responsible to get search queries
-     * 
+     * Register custom rewrite rules for search URLs.
+     *
      * @since 1.0.0
      * @return void
      */
-    public function sdw_get_search_results($query)
-    {
-        if ($query->is_search() && !is_admin() && $query->is_main_query()) {
-            $post_types = get_post_types(['public' => true], 'names');
-            $query->set('post_type', $post_types);
-        }
-    }
-
     public function sdw_website_search_rewrite()
     {
-        // add_rewrite_rule('^search/?$', 'index.php?sdw_search_page=1', 'top');
-        add_rewrite_rule(
-        '^search/page/([0-9]+)/?$',
-        'index.php?sdw_search_page=1&paged=$matches[1]',
-        'top'
-    );
-
-    add_rewrite_rule(
-        '^search/?$',
-        'index.php?sdw_search_page=1',
-        'top'
-    );
+        add_rewrite_rule('^search/content/page/([0-9]+)/?$','index.php?sdw_search_page=1&paged=$matches[1]','top');
+        add_rewrite_rule('^search/content/?$','index.php?sdw_search_page=1','top');
     }
 
+    /**
+     * Register custom query variables.
+     *
+     * @param array $vars Existing query vars.
+     * 
+     * @since 1.0.1
+     * @return array Modified query vars.
+     */
     public function sdw_website_search_query_vars($vars)
     {
         $vars[] = 'sdw_search_page';
-        $vars[] = 'q';
+        $vars[] = 'keys';
         return $vars;
     }
-
+    
+    /**
+     * Modify main query for custom search page.
+     *
+     * @param WP_Query $query Main query object.
+     * 
+     * @since 1.0.1
+     * @return void
+     */
     public function sdw_pre_get_posts_callback($query)
     {
         if (is_admin() || !$query->is_main_query() || !get_query_var('sdw_search_page')) {
             return;
         }
 
-        $search_term = sanitize_text_field(get_query_var('q'));
+        $search_term = sanitize_text_field(get_query_var('keys'));
 
         if (!$search_term) {
             return;
@@ -167,28 +165,64 @@ class Website_Search_Shortcode
         $query->set('post_type', $post_types);
     }
 
+     /**
+     * Extend search SQL to include meta and taxonomy terms.
+     *
+     * @param string   $search Existing search SQL.
+     * @param WP_Query $query  Query object.
+     * 
+     * @since 1.0.1
+     * @return string Modified search SQL.
+     */
     public function sdw_posts_search($search, $query)
     {
+        // global $wpdb;
+        // if ( !$query->is_main_query() || !get_query_var('sdw_search_page')) {
+        //     return $search;
+        // }
+
+        // $term = sanitize_text_field(get_query_var('keys'));
+        // if (!$term) {
+        //     return $search;
+        // }
+
+        // $like = '%' . $wpdb->esc_like($term) . '%';
+        // return "
+        // AND ({$wpdb->posts}.post_title LIKE '{$like}' OR {$wpdb->posts}.post_content LIKE '{$like}' OR pm.meta_value LIKE '{$like}' OR t.name LIKE '{$like}')
+        // ";
+
         global $wpdb;
 
-        if ( !$query->is_main_query() || !get_query_var('sdw_search_page')) {
-            return $search;
-        }
-
-        $term = sanitize_text_field(get_query_var('q'));
-
-        if (!$term) {
-            return $search;
-        }
-
-        $like = '%' . $wpdb->esc_like($term) . '%';
-
-        return "
-        AND ({$wpdb->posts}.post_title LIKE '{$like}' OR {$wpdb->posts}.post_content LIKE '{$like}' OR pm.meta_value LIKE '{$like}' OR t.name LIKE '{$like}')
-        ";
+    if (!$query->is_main_query() || !get_query_var('sdw_search_page')) {
+        return $search;
     }
 
+    $term = sanitize_text_field(get_query_var('keys'));
+    if (!$term) {
+        return $search;
+    }
 
+    $like = '%' . $wpdb->esc_like($term) . '%';
+
+    $search .= $wpdb->prepare(
+        " OR pm.meta_value LIKE %s OR t.name LIKE %s ",
+        $like,
+        $like
+    );
+
+    return $search;
+    
+    }
+
+    /**
+     * Join postmeta and taxonomy tables for search.
+     *
+     * @param string   $join  Existing SQL JOIN clause.
+     * @param WP_Query $query Query object.
+     * 
+     * @since 1.0.1
+     * @return string Modified JOIN clause.
+     */        
     public function sdw_posts_join($join, $query)
     {
         global $wpdb;
@@ -214,18 +248,32 @@ class Website_Search_Shortcode
         return $join;
     }
 
+    /**
+     * Group search results by post ID.
+     *
+     * @param string   $groupby Existing GROUP BY clause.
+     * @param WP_Query $query   Query object.
+     * 
+     * @since 1.0.1
+     * @return string Modified GROUP BY clause.
+     */
     public function sdw_posts_groupby($groupby, $query)
     {
         global $wpdb;
-
         if (!$query->is_main_query() || !get_query_var('sdw_search_page')) {
             return $groupby;
         }
-
         return "{$wpdb->posts}.ID";
     }
 
-
+    /**
+     * Load custom search results template.
+     *
+     * @param string $template Current template path.
+     * 
+     * @since 1.0.1
+     * @return string Template path to load.
+     */        
     public function sdw_load_website_search_template($template)
     {
         if (get_query_var('sdw_search_page')) {
