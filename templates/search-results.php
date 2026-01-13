@@ -4,6 +4,8 @@ get_header();
 global $wp_query;
 $search_term = get_query_var('keys');
 $current_page = get_query_var('page') ? absint(get_query_var('page')) : 1;
+
+
 ?>
 
 <div class="sdw-search-wrapper container">
@@ -49,15 +51,12 @@ $current_page = get_query_var('page') ? absint(get_query_var('page')) : 1;
 
         <div class="sdw-pagination">
             <?php
-            echo paginate_links(array(
-                'base' => home_url('/search/content') . '%_%',
-                'format' => '?keys=' . urlencode($search_term) . '&page=%#%',
-                'current' => $current_page,
-                'total' => $wp_query->max_num_pages,
-                'prev_text' => __('« Previous'),
-                'next_text' => __('Next »'),
-                'type' => 'list',
-            ));
+            echo paginate_links([
+                'base'     => home_url('/search/content') . '?keys=' . urlencode($search_term) . '%_%',
+                'format'   => '&page=%#%',
+                'current'  => max(1, get_query_var('page')),
+                'total'    => $wp_query->max_num_pages,
+            ]);
             ?>
         </div>
 

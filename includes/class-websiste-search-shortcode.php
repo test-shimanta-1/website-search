@@ -129,7 +129,6 @@ class Website_Search_Shortcode
      */
     public function sdw_website_search_rewrite()
     {
-        add_rewrite_rule('^search/content/page/([0-9]+)/?$','index.php?sdw_search_page=1&paged=$matches[1]','top');
         add_rewrite_rule('^search/content?$','index.php?sdw_search_page=1','top');
     }
 
@@ -168,7 +167,7 @@ class Website_Search_Shortcode
         }
 
         $paged = get_query_var('paged') ? absint(get_query_var('paged')) : 1;
-        $query->set('paged', $paged);
+        $query->set('paged', max(1, get_query_var('page')));
 
         // Native WP search (title + content)
         $query->set('s', $search_term);
