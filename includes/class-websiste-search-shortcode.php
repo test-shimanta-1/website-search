@@ -24,16 +24,16 @@ class Website_Search_Shortcode
      */
     public function __construct()
     {
-        add_shortcode('website_search', [$this, 'sdw_website_search_short_code_callback']);
+        add_shortcode('website_search', [$this, 'sdw_website_search_short_code_callback']); // search box ui callback
 
         add_action('init', [$this, 'sdw_website_search_rewrite']); // add '/search' before search params
         add_action('query_vars', [$this, 'sdw_website_search_query_vars'], 10, 1); // overwriting wordpress query behaviour s -> q
         add_action('pre_get_posts', [$this, 'sdw_pre_get_posts_callback']); // get search results
         add_filter('template_include', [$this, 'sdw_load_website_search_template']); // search template
 
-        add_filter('posts_join', [$this, 'sdw_posts_join'], 10, 2);
-        add_filter('posts_search', [$this, 'sdw_posts_search'], 10, 2);
-        add_filter('posts_groupby', [$this, 'sdw_posts_groupby'], 10, 2);
+        add_filter('posts_join', [$this, 'sdw_posts_join'], 10, 2); // union all the search results
+        add_filter('posts_search', [$this, 'sdw_posts_search'], 10, 2); // search into post meta & taxonomy
+        add_filter('posts_groupby', [$this, 'sdw_posts_groupby'], 10, 2); // group by all the search
     }
 
     /**
@@ -148,7 +148,6 @@ class Website_Search_Shortcode
         }
 
         $search_term = sanitize_text_field(get_query_var('keys'));
-
         if (!$search_term) {
             return;
         }
@@ -176,42 +175,23 @@ class Website_Search_Shortcode
      */
     public function sdw_posts_search($search, $query)
     {
-        // global $wpdb;
-        // if ( !$query->is_main_query() || !get_query_var('sdw_search_page')) {
-        //     return $search;
-        // }
-
-        // $term = sanitize_text_field(get_query_var('keys'));
-        // if (!$term) {
-        //     return $search;
-        // }
-
-        // $like = '%' . $wpdb->esc_like($term) . '%';
-        // return "
-        // AND ({$wpdb->posts}.post_title LIKE '{$like}' OR {$wpdb->posts}.post_content LIKE '{$like}' OR pm.meta_value LIKE '{$like}' OR t.name LIKE '{$like}')
-        // ";
-
         global $wpdb;
+        if (!$query->is_main_query() || !get_query_var('sdw_search_page')) {
+            return $search;
+        }
 
-    if (!$query->is_main_query() || !get_query_var('sdw_search_page')) {
+        $term = sanitize_text_field(get_query_var('keys'));
+        if (!$term) {
+            return $search;
+        }
+
+        $like = '%' . $wpdb->esc_like($term) . '%';
+        $search .= $wpdb->prepare(
+            " OR pm.meta_value LIKE %s OR t.name LIKE %s ",
+            $like,
+            $like
+        );
         return $search;
-    }
-
-    $term = sanitize_text_field(get_query_var('keys'));
-    if (!$term) {
-        return $search;
-    }
-
-    $like = '%' . $wpdb->esc_like($term) . '%';
-
-    $search .= $wpdb->prepare(
-        " OR pm.meta_value LIKE %s OR t.name LIKE %s ",
-        $like,
-        $like
-    );
-
-    return $search;
-    
     }
 
     /**
@@ -226,7 +206,6 @@ class Website_Search_Shortcode
     public function sdw_posts_join($join, $query)
     {
         global $wpdb;
-
         if (!$query->is_main_query() || !get_query_var('sdw_search_page')) {
             return $join;
         }
