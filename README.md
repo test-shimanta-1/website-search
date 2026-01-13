@@ -12,6 +12,7 @@ You can easily add a search form or a modal-based search anywhere on your site u
 - Shortcode-based integration
 - Optional modal (popup) search interface
 - Customizable modal button text
+- suport of wordpress pagination on display search results.
 
 ---
 

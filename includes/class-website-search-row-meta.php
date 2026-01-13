@@ -31,6 +31,8 @@ class Website_Search_Plugin_Meta
     /**
      * Load Thickbox only on Plugins page
      * 
+     * $hook args 
+     * 
      * @since 1.0.0
      * @return void
      */
@@ -42,6 +44,9 @@ class Website_Search_Plugin_Meta
 
     /**
      * Add "View Details" link to plugin row meta
+     * 
+     * @param $links TYPE its work
+     * @param @file TYPE its work
      * 
      * @since 1.0.0
      * @return void
