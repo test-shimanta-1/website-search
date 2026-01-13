@@ -33,7 +33,7 @@ class Website_Search_Shortcode
 
         add_filter('posts_join', [$this, 'sdw_posts_join'], 10, 2); // union all the search results
         add_filter('posts_search', [$this, 'sdw_posts_search'], 10, 2); // search into post meta & taxonomy
-        add_filter('posts_groupby', [$this, 'sdw_posts_groupby'], 10, 2); // group by all the search
+        add_filter('posts_groupby', [$this, 'sdw_posts_groupby'], 10, 2); // group by all the 
     }
 
     /**
