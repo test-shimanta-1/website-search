@@ -5,6 +5,11 @@
  * @since 1.0.0
  * @package Website_Search
  */
+
+if (!defined('ABSPATH')) {
+    exit;
+}
+
 class Website_Search{
     /**
      * Construct
