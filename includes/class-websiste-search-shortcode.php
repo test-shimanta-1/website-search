@@ -190,20 +190,30 @@ class Website_Search_Shortcode
     public function sdw_posts_search($search, $query)
     {
         global $wpdb;
+
         if (!$query->is_main_query() || !get_query_var('sdw_search_page')) {
-            return $search;
+        return $search;
         }
 
-        $term = sanitize_text_field(get_query_var('keys'));
+        $term = get_query_var('keys');
         if (!$term) {
-            return $search;
+        return $search;
         }
 
         $like = '%' . $wpdb->esc_like($term) . '%';
-        $search .= $wpdb->prepare(
-            " OR pm.meta_value LIKE %s OR t.name LIKE %s ",
-            $like,
-            $like
+
+        // Remove default search and rebuild it safely
+        $search = $wpdb->prepare(
+        " AND (
+        {$wpdb->posts}.post_title LIKE %s
+        OR {$wpdb->posts}.post_content LIKE %s
+        OR pm.meta_value LIKE %s
+        OR t.name LIKE %s
+        ) ",
+        $like,
+        $like,
+        $like,
+        $like
         );
         return $search;
     }
