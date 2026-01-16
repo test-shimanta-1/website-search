@@ -35,6 +35,8 @@ class Website_Search_Shortcode
         add_filter('posts_join', [$this, 'sdw_posts_join'], 10, 2); // union all the search results
         add_filter('posts_search', [$this, 'sdw_posts_search'], 10, 2); // search into post meta & taxonomy
         add_filter('posts_groupby', [$this, 'sdw_posts_groupby'], 10, 2); // group by all the 
+
+        add_action('wp_enqueue_scripts', [$this, 'sdw_enqueue_assets_css_js']); // enqueue custom js and css scripts
     }
 
     /**
@@ -63,62 +65,70 @@ class Website_Search_Shortcode
     {
         $atts = shortcode_atts(
             array(
-                'variant' => 'form',        // form | modal
-                'button_text' => 'Search',  // modal button text
+                'variant'     => 'form',   // form | modal
+                'button_text' => 'Search',
             ),
             $atts,
             'website_search'
         );
 
         ob_start();
+
         // FORM ONLY (default)
-        if ($atts['variant'] !== 'modal'): ?>
-            <form method="get" action="<?php echo esc_url(home_url('/search/content')); ?>">
-                <input type="text" name='keys' class="form-control"
-                    placeholder="<?php esc_attr_e('Enter your search query', 'website-search'); ?>" required>
-                <button type="submit" class="btn btn-primary">
+        if ($atts['variant'] !== 'modal') : ?>
+            <form method="get" action="<?php echo esc_url(home_url('/search/content')); ?>" class="sdw-search-form">
+                <input
+                    type="text"
+                    name="keys"
+                    class="sdw-search-input"
+                    placeholder="<?php esc_attr_e('Enter your search query', 'website-search'); ?>"
+                    required
+                >
+                <button type="submit" class="sdw-search-button">
                     <?php esc_html_e('Search', 'website-search'); ?>
                 </button>
             </form>
 
-            <?php
-            // MODAL VARIANT
-        else:
-            $button_text = esc_html($atts['button_text']);
-            ?>
-            <!-- Button trigger modal -->
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#sdwSearchModal">
-                <?php echo $button_text; ?>
+        <?php else : ?>
+
+            <button type="button" class="sdw-search-open">
+                <?php echo esc_html($atts['button_text']); ?>
             </button>
 
-            <!-- Modal -->
-            <div class="modal fade" id="sdwSearchModal" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
+            <!-- Modal Overlay -->
+            <div class="sdw-search-modal" aria-hidden="true">
+                <div class="sdw-search-modal-overlay"></div>
 
-                        <div class="modal-header">
-                            <h5 class="modal-title">
-                                <?php esc_html_e('Search in website', 'website-search'); ?>
-                            </h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
+                <div class="sdw-search-modal-content" role="dialog" aria-modal="true">
+                    <button class="sdw-search-close" aria-label="<?php esc_attr_e('Close', 'website-search'); ?>">
+                        ×
+                    </button>
 
-                        <div class="modal-body">
-                            <form method="get" action="<?php echo esc_url(home_url('/search/content')); ?>">
-                                <input type="text" name='keys' class="form-control mb-2"
-                                    placeholder="<?php esc_attr_e('Enter your search query', 'website-search'); ?>" required>
-                                <button type="submit" class="btn btn-primary w-100">
-                                    <?php esc_html_e('Search', 'website-search'); ?>
-                                </button>
-                            </form>
-                        </div>
+                    <h3 class="sdw-search-title">
+                        <?php esc_html_e('Search in website', 'website-search'); ?>
+                    </h3>
 
-                    </div>
+                    <form method="get" action="<?php echo esc_url(home_url('/search/content')); ?>" class="sdw-search-form">
+                        <input
+                            type="text"
+                            name="keys"
+                            class="sdw-search-input"
+                            placeholder="<?php esc_attr_e('Enter your search query', 'website-search'); ?>"
+                            required
+                            autofocus
+                        >
+                        <button type="submit" class="sdw-search-button">
+                            <?php esc_html_e('Search', 'website-search'); ?>
+                        </button>
+                    </form>
                 </div>
             </div>
+
         <?php endif;
+
         return ob_get_clean();
     }
+
 
 
     /**
@@ -283,6 +293,31 @@ class Website_Search_Shortcode
             return WEBSITE_SEARCH_PATH . 'templates/search-results.php';
         }
         return $template;
+    }
+
+    /**
+     * Load custom css and js files for search modal
+     *
+     * @since 1.0.2
+     * @return void
+     */  
+    public function sdw_enqueue_assets_css_js(){
+        wp_enqueue_script('jquery');
+
+        wp_enqueue_script(
+            'sdw-website-search',
+            WEBSITE_SEARCH_URL . 'assets/js/search-modal.js',
+            ['jquery'],
+            WEBSITE_SEARCH_VERSION,
+            true
+        );
+
+        wp_enqueue_style(
+            'sdw-website-search',
+            WEBSITE_SEARCH_URL . 'assets/css/search.css',
+            [],
+            WEBSITE_SEARCH_VERSION
+        );
     }
     
 }
