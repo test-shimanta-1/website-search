@@ -25,3 +25,22 @@ function run_website_search() {
 }
 run_website_search();
 
+/**
+ * flush rewrite rule for path 'search/content'
+ * 
+ */
+register_activation_hook(__FILE__, 'sdw_website_search_activate');
+register_deactivation_hook(__FILE__, 'sdw_website_search_deactivate');
+
+function sdw_website_search_activate() {
+    // Register rewrite rules first
+    if (class_exists('Website_Search_Shortcode')) {
+        $shortcode = new Website_Search_Shortcode();
+        $shortcode->sdw_website_search_rewrite();
+    }
+    flush_rewrite_rules();
+}
+
+function sdw_website_search_deactivate() {
+    flush_rewrite_rules();
+}

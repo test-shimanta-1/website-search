@@ -284,5 +284,5 @@ class Website_Search_Shortcode
         }
         return $template;
     }
-
+    
 }
